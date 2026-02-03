@@ -2,7 +2,7 @@
 
 int main(int ac, char **av) {
     FILE *file;
-
+    
     if (ac == 1) {
         bsq(stdin);
     } else {
