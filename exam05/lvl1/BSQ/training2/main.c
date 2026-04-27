@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 typedef struct s_map {
     int i;
@@ -19,7 +19,7 @@ typedef struct s_solution {
 
 void free_map(t_map *map) {
     if (map->map) {
-        for (int i = 0; i < map->i; i++) {
+        for (int i = 0; i < map->i; ++i) {
             free(map->map[i]);
         }
         free(map->map);
@@ -27,7 +27,12 @@ void free_map(t_map *map) {
 }
 
 void parse_map(t_map *map, FILE *file) {
-    if (fscanf(file, "%d %c %c %c", &map->i, &map->empty, &map->obstacle, &map->full) != 4 || map->empty == map->full || map->empty == map->obstacle || map->obstacle == map->empty) {
+    if (fscanf(file, "%d %c %c %c", &map->i, &map->empty, &map->obstacle, &map->full) != 4 || map->empty == map->full || map->empty == map->obstacle || map->obstacle == map->full) {
+        return;
+    }
+
+    map->map = calloc(map->i, sizeof(char *));
+    if (!map->map) {
         return;
     }
 
@@ -36,46 +41,43 @@ void parse_map(t_map *map, FILE *file) {
     getline(&dummy, &dummy_size, file);
     free(dummy);
 
-    map->map = calloc(map->i, sizeof(char *));
-    if (!map->map) { 
-        return;
-    }
     char *line = NULL;
     size_t size;
-    ssize_t nbytes;
+    ssize_t nread;
     for (int i = 0; i < map->i; ++i) {
-        nbytes = getline(&line, &size, file);
-        if (nbytes <= 1 || line[nbytes - 1] != '\n') {
+        nread = getline(&line, &size, file);
+        if (nread <= 1 || line[nread - 1] != '\n') {
             map->i = i;
             free_map(map);
             free(line);
             return;
         }
-        line[nbytes - 1] = '\0';
+        line[nread - 1] = '\0';
 
         if (i == 0) {
-            map->j = nbytes - 1;
+            map->j = nread - 1;
             if (map->j == 0) {
                 map->i = i + 1;
                 free_map(map);
                 free(line);
                 return;
             }
-        } else if (map->j != nbytes - 1) {
+        } else if (nread - 1 != map->j) {
             map->i = i + 1;
             free_map(map);
             free(line);
             return;
         }
 
-        for (int j = 0; j < map->j; j++) {
-            if (line[j] != map->empty && line[j] != map->obstacle && line[j]) {
+        for (int j = 0; j < map->j; ++j) {
+            if (line[j] != map->empty && line[j] != map->obstacle) {
                 map->i = i + 1;
                 free_map(map);
                 free(line);
                 return;
             }
         }
+
         map->map[i] = line;
         line = NULL;
     }
@@ -90,31 +92,28 @@ int min3(int a, int b, int c) {
     if (res > c) {
         res = c;
     }
-
     return res;
 }
 
 void algo(t_map *map, t_solution *sol) {
-    int **num_map = calloc(map->i, sizeof(int *));
-    for (int i = 0; i < map->i; ++i) {
-        num_map[i] = calloc(map->j, sizeof(int));
-    }
     sol->size = 0;
+    int **int_map = calloc(map->i, sizeof(int *));
+    for (int i = 0; i < map->i; ++i) {
+        int_map[i] = calloc(map->j, sizeof(int));
+    }
 
     for (int i = 0; i < map->i; ++i) {
-        for (int j = 0; j < map->j; ++j) {
+        for (int j = 0; j < map->j; j++) {
             if (map->map[i][j] == map->obstacle) {
-                num_map[i][j] = 0;
+                int_map[i][j] = 0;
+            } else if (i == 0 || j == 0) {
+                int_map[i][j] = 1;
             } else {
-                if (i == 0 || j == 0) {
-                    num_map[i][j] = 1;
-                } else {
-                    num_map[i][j] = 1 + min3(num_map[i][j - 1], num_map[i - 1][j], num_map[i - 1][j - 1]);
-                }
+                int_map[i][j] = 1 + min3(int_map[i][j - 1], int_map[i - 1][j], int_map[i - 1][j - 1]);
             }
 
-            if (num_map[i][j] > sol->size) {
-                sol->size = num_map[i][j];
+            if (int_map[i][j] > sol->size) {
+                sol->size = int_map[i][j];
                 sol->i = i;
                 sol->j = j;
             }
@@ -122,14 +121,15 @@ void algo(t_map *map, t_solution *sol) {
     }
 
     for (int i = 0; i < map->i; ++i) {
-        free(num_map[i]);
+        free(int_map[i]);
     }
-    free(num_map);
+    free(int_map);
 }
 
 void bsq(FILE *file) {
     t_map map = {0};
     t_solution sol;
+
     parse_map(&map, file);
     if (!map.map) {
         fprintf(stderr, "map error\n");
@@ -160,7 +160,7 @@ int main(int ac, char **av) {
     if (ac == 1) {
         bsq(stdin);
     } else {
-        for (int i = 1; i < ac; i++) {
+        for (int i = 1; i < ac; ++i) {
             file = fopen(av[i], "r");
             if (!file) {
                 fprintf(stderr, "map error\n");
@@ -170,6 +170,4 @@ int main(int ac, char **av) {
             }
         }
     }
-
-    return 0;
 }

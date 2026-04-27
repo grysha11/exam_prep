@@ -1,7 +1,7 @@
 [EN]
 Assigment name: Polyset
 Expected File: searchable_array_bag.cpp, searchable_array_bag.hpp,
-searchable_tree_bg.cpp, searchable_tree_bag.hpp, set.cpp, set.hpp
+searchable_tree_bag.cpp, searchable_tree_bag.hpp, set.cpp, set.hpp
 
 You will find in this directory some classes:
 - bag: an abstract class representing a bag
