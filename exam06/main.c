@@ -28,7 +28,7 @@ void exit_error(char *msg, t_client *client_lst) {
         free(client_lst);
         client_lst = tmp;
     }
-    sprintf(stderr, msg);
+    write(2, msg, strlen(msg));
     exit(1);
 }
 
@@ -77,7 +77,7 @@ char *str_join(char *str1, char *str2) {
     } else {
         len = strlen(str1);
     }
-    new = malloc(sizeof(char *) * (len + strlen(str2) + 1));
+    new = malloc(sizeof(char) * (len + strlen(str2) + 1));
     new[0] = 0;
     if (str1 != 0) {
         strcat(new, str1);
@@ -227,7 +227,7 @@ int main(int ac, char **av) {
     bzero(&address, sizeof(address));
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    address.sin_port = port;
+    address.sin_port = htons(port);
 
     if (bind(sockfd, (const struct sockaddr *)&address, sizeof(address))) {
         exit_error("Fatal error\n", NULL);
